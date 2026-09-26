@@ -1,0 +1,66 @@
+name: Cars4Mars Sponsor Outreach
+
+on:
+  schedule:
+    - cron: '0 6,12 * * *'   # 08:00 and 14:00 SAST
+  workflow_dispatch:
+
+jobs:
+  outreach:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — only run from 1 Jan 2027
+        id: guard
+        run: |
+          if [[ "$(date -u +%Y-%m-%d)" < "2027-01-01" ]]; then
+            echo "Not yet January 2027. Skipping."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Python
+        if: steps.guard.outputs.skip == 'false'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip == 'false'
+        run: pip install -r requirements.txt
+
+      - name: Seed sponsors
+        if: steps.guard.outputs.skip == 'false'
+        run: python scripts/scrape_sponsors.py
+
+      - name: Send outreach emails
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          UCT_EMAIL: ${{ secrets.UCT_EMAIL }}
+          UCT_PASSWORD: ${{ secrets.UCT_PASSWORD }}
+        run: python scripts/send_sponsor_emails.py
+
+      - name: Check for replies
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          UCT_EMAIL: ${{ secrets.UCT_EMAIL }}
+          UCT_PASSWORD: ${{ secrets.UCT_PASSWORD }}
+        run: python scripts/check_replies.py
+
+      - name: Cleanup unreplied emails older than 2 days
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          UCT_EMAIL: ${{ secrets.UCT_EMAIL }}
+          UCT_PASSWORD: ${{ secrets.UCT_PASSWORD }}
+        run: python scripts/cleanup_sponsor_emails.py
+
+      - name: Commit progress
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/
+          git commit -m "Update sponsor outreach data" || exit 0
+          git push
