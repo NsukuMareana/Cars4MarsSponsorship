@@ -3,6 +3,7 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate, make_msgid
 from dotenv import dotenv_values
 
 cfg = dotenv_values('.env')
@@ -12,21 +13,38 @@ password = cfg.get('UCT_PASSWORD') or os.environ.get('UCT_PASSWORD')
 SPONSORS_FILE = 'data/master_sponsors.csv'
 FIELDS = ["company", "contact", "category", "tier", "sent", "replied"]
 
+# ─── EDIT THIS: Your personal signature ───
+SENDER_NAME = "Nsuku Mareana"
+SENDER_ROLE = "Team Lead, Cars4Mars"
+SENDER_PHONE = "+27 XX XXX XXXX"   # optional — remove line if not wanted
+# ─────────────────────────────────────────
+
 def get_subject(company, category):
     if category == "Robotics":
-        return f"Partnership: Africa's next robotics engineers"
+        return "Partnership: Africa's next robotics engineers"
     elif category == "Coding Education":
-        return f"Partnership: Your graduates mentoring Mars rover teams"
+        return "Partnership: Your graduates mentoring Mars rover teams"
     elif category == "Robotics (Global)":
-        return f"Partnership: Extend your robotics impact to Africa"
+        return "Partnership: Extend your robotics impact to Africa"
     elif category == "STEM Education":
-        return f"Partnership: Showcase your STEM impact with Cars4Mars"
+        return "Partnership: Showcase your STEM impact with Cars4Mars"
     elif category in ["Hardware", "Electronics", "Software"]:
-        return f"Partnership: Your products power Africa's Mars rovers"
+        return "Partnership: Your products power Africa's Mars rovers"
     else:
         return f"Cars4Mars Partnership Opportunity for {company}"
 
+def get_signature():
+    sig = f"""Best regards,
+{SENDER_NAME}
+{SENDER_ROLE}
+www.cars4mars.co.za"""
+    if SENDER_PHONE:
+        sig += f"\n{SENDER_PHONE}"
+    return sig
+
 def get_body(company, tier, category):
+    sig = get_signature()
+
     if category == "Robotics":
         return f"""Dear {company} Team,
 
@@ -38,9 +56,7 @@ We're inviting {company} to partner with us for the 2027 edition as a {tier} Spo
 
 Would you be open to a 15-minute call next week?
 
-Best regards,
-Cars4Mars Sponsorship Team
-www.cars4mars.co.za"""
+{sig}"""
 
     elif category == "Coding Education":
         return f"""Dear {company} Team,
@@ -53,9 +69,7 @@ We're inviting {company} to partner as a {tier} Sponsor. Your support would conn
 
 Would you be open to a 15-minute call next week?
 
-Best regards,
-Cars4Mars Sponsorship Team
-www.cars4mars.co.za"""
+{sig}"""
 
     elif category == "Robotics (Global)":
         return f"""Dear {company} Team,
@@ -68,9 +82,7 @@ We're inviting {company} to partner as a {tier} Sponsor for 2027. This is a natu
 
 Would you be open to a 30-minute call to explore this?
 
-Best regards,
-Cars4Mars Sponsorship Team
-www.cars4mars.co.za"""
+{sig}"""
 
     elif category == "STEM Education":
         return f"""Dear {company} Team,
@@ -83,31 +95,37 @@ We're inviting {company} to partner as a {tier} Sponsor for 2027. Your support w
 
 Would you be open to a 15-minute call next week?
 
-Best regards,
-Cars4Mars Sponsorship Team
-www.cars4mars.co.za"""
+{sig}"""
 
     else:
         return f"""Dear {company} Team,
 
-I'm reaching out from Cars4Mars, Africa's only Mars rover competition for high school and university students. In 2026, 100 teams from 11 African countries designed and built Mars rover prototypes, with 18 finalist teams competing at SANSA's Mars Yard.
+I'm reaching out about Cars4Mars, Africa's only Mars rover competition for high school and university students. In 2026, 100 teams from 11 African countries designed and built Mars rover prototypes, with 18 finalist teams competing at SANSA's Mars Yard.
 
 We're inviting {company} to partner with us for the 2027 edition as a {tier} Sponsor.
 
 Would you be open to a 15-minute call next week to explore this?
 
-Best regards,
-Cars4Mars Sponsorship Team
-www.cars4mars.co.za"""
+{sig}"""
 
 def send_email(to_email, company, tier, category):
     subject = get_subject(company, category)
     body = get_body(company, tier, category)
+
     msg = MIMEMultipart()
-    msg['From'] = user
+    msg['From'] = f"{SENDER_NAME} <{user}>"
     msg['To'] = to_email
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+    msg['Date'] = formatdate(localtime=True)
+    msg['Message-ID'] = make_msgid(domain='cars4mars.co.za')
+
+    # ─── HIGH IMPORTANCE HEADERS ───
+    msg['X-Priority'] = '1 (Highest)'
+    msg['X-MSMail-Priority'] = 'High'
+    msg['Importance'] = 'High'
+    msg['Priority'] = 'urgent'
+
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         server.login(user, password)
@@ -126,9 +144,9 @@ def main():
                 try:
                     send_email(row['contact'], row['company'], row['tier'], row['category'])
                     row['sent'] = 'yes'
-                    print(f"Sent to {row['company']} ({row['contact']})")
+                    print(f"✅ Sent to {row['company']} ({row['contact']})")
                 except Exception as e:
-                    print(f"Failed to send to {row['company']}: {e}")
+                    print(f"❌ Failed to send to {row['company']}: {e}")
             rows.append(row)
 
     with open(SPONSORS_FILE, 'w', newline='') as f:
