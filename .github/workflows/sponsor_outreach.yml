@@ -33,6 +33,9 @@ jobs:
 
       - name: Seed sponsors
         if: steps.guard.outputs.skip == 'false'
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
         run: python scripts/scrape_sponsors.py
 
       - name: Send outreach emails
