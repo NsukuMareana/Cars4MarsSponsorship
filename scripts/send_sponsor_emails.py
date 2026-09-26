@@ -15,8 +15,8 @@ FIELDS = ["company", "contact", "category", "tier", "sent", "replied"]
 
 # ─── EDIT THIS: Your personal signature ───
 SENDER_NAME = "Nsuku Mareana"
-SENDER_ROLE = "Team Lead, Cars4Mars"
-SENDER_PHONE = "+27 XX XXX XXXX"   # optional — remove line if not wanted
+SENDER_ROLE = "Cars4Mars Team Lead"
+SENDER_PHONE = "+27 68 078 9360"   # optional — remove line if not wanted
 # ─────────────────────────────────────────
 
 def get_subject(company, category):
