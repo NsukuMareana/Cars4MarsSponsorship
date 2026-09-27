@@ -14,8 +14,8 @@ jobs:
       - name: Guard — only run from 1 Jan 2027
         id: guard
         run: |
-          if [[ "$(date -u +%Y-%m-%d)" < "2027-01-01" ]]; then
-            echo "Not yet January 2027. Skipping."
+          if [[ "$(date -u +%Y-%m-%d)" < "2026-12-01" ]]; then
+            echo "Not yet December 2026. Skipping."
             echo "skip=true" >> $GITHUB_OUTPUT
           else
             echo "skip=false" >> $GITHUB_OUTPUT
