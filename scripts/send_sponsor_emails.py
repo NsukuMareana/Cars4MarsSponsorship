@@ -37,7 +37,8 @@ def get_signature():
     sig = f"""Best regards,
 {SENDER_NAME}
 {SENDER_ROLE}
-www.cars4mars.co.za"""
+www.cars4mars.co.za
+LinkedIn: www.linkedin.com/in/nsukumareana"""
     if SENDER_PHONE:
         sig += f"\n{SENDER_PHONE}"
     return sig
