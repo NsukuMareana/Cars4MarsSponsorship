@@ -13,11 +13,11 @@ password = cfg.get('UCT_PASSWORD') or os.environ.get('UCT_PASSWORD')
 SPONSORS_FILE = 'data/master_sponsors.csv'
 FIELDS = ["company", "contact", "category", "tier", "sent", "replied"]
 
-# ─── EDIT THIS: Your personal signature ───
+# ─── Your personal signature ───
 SENDER_NAME = "Nsuku Mareana"
 SENDER_ROLE = "Team Lead, Yet to decide on a team"
-SENDER_PHONE = "+27 68 078 9360"   # optional — remove line if not wanted
-# ─────────────────────────────────────────
+SENDER_PHONE = "+27 68 078 9360"
+# ───────────────────────────────
 
 def get_subject(company, category):
     if category == "Robotics":
@@ -119,7 +119,7 @@ def send_email(to_email, company, tier, category):
     msg['Date'] = formatdate(localtime=True)
     msg['Message-ID'] = make_msgid(domain='cars4mars.co.za')
 
-    # ─── HIGH IMPORTANCE HEADERS ───
+    # High importance headers (red "!" flag)
     msg['X-Priority'] = '1 (Highest)'
     msg['X-MSMail-Priority'] = 'High'
     msg['Importance'] = 'High'
@@ -127,13 +127,14 @@ def send_email(to_email, company, tier, category):
 
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
+    # ── Send via Gmail SMTP ──
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         server.login(user, password)
         server.send_message(msg)
 
 def main():
     if not user or not password:
-        print("No credentials found. Skipping send.")
+        print("No Gmail credentials found. Skipping send.")
         return
 
     rows = []
@@ -144,7 +145,7 @@ def main():
                 try:
                     send_email(row['contact'], row['company'], row['tier'], row['category'])
                     row['sent'] = 'yes'
-                    print(f"✅ Sent to {row['company']} ({row['contact']})")
+                    print(f"✅ Sent via Gmail to {row['company']} ({row['contact']})")
                 except Exception as e:
                     print(f"❌ Failed to send to {row['company']}: {e}")
             rows.append(row)
